@@ -2,7 +2,7 @@
 zenfolio-sync
 =============
 
-Sync a directory of jpg files with [Zenfolio](http://www.zenfolio.com/).
+Sync a directory of jpg files with [Zenfolio](http://www.zenfolio.com/ Zenfolio).
 Given a directory of jpg files of the form:
 
     a/
