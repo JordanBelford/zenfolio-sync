@@ -9,3 +9,5 @@ dist
 *.png
 /.DS_Store
 /pyzenfolio.iml
+/zenfolio-sync.iml
+/run.sh
