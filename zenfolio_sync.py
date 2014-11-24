@@ -143,6 +143,9 @@ class LocalPhotoSet(object):
         assert path.endswith('public')
         self._path = path
 
+    def path(self):
+        return self._path
+
     def title(self):
         return os.path.basename(self._path)
 
@@ -207,7 +210,7 @@ def sync_groups(conn, local_group, remote_group):
     :type local_group: LocalGroup
     :type remote_group: RemoteGroup
     """
-    logging.info('Syncing: ' + local_group.path() + ' : ' + remote_group.path())
+    logging.info('Syncing: ' + local_group.path() + ' : ' + remote_group.title())
 
     if isinstance(remote_group, RemotePhotoSet):
         assert isinstance(local_group, LocalPhotoSet)
