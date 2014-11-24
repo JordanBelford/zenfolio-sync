@@ -1,0 +1,11 @@
+*.pyc
+*.orig
+*~
+.idea
+dist
+*egg*
+*.json
+*.jpg
+*.png
+/.DS_Store
+/pyzenfolio.iml
