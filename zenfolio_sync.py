@@ -10,7 +10,9 @@ import pyzenfolio.api
 import sys
 
 
-TOP_GROUP_TITLE = 'pictures'
+# TOP_GROUP_TITLE = 'All Photographs'
+# TODO consider making all leaf directories photosets
+PARENT_GROUP_TITLE = 'Portfolio'
 
 
 class Connection(object):
@@ -32,7 +34,7 @@ class Connection(object):
         @rtype: RemoteGroup
         """
         group = RemoteGroup(self.conn().LoadGroupHierarchy())
-        assert group.title() == TOP_GROUP_TITLE
+        # assert group.title() == TOP_GROUP_TITLE
         return group
 
 
@@ -87,7 +89,9 @@ class LocalGroup(object):
 
         def make_group(name):
             path = os.path.join(self.path(), name)
-            if name == 'public':
+            parentName = os.path.basename(self.path())
+            # print('local make_group, name: ' + name + ' parentName: ' + parentName + ' path: ' + path);
+            if parentName == PARENT_GROUP_TITLE:
                 return LocalPhotoSet(path)
             else:
                 return LocalGroup(path)
@@ -118,21 +122,25 @@ class RemoteGroup(object):
                 return RemotePhotoSet(g)
         return [make_group(group) for group in self._group['Elements']]
 
-    def get_subgroup(self, conn, title):
+    def get_subgroup(self, conn, title, parentTitle):
         for group in self.subgroups():
             if group.title() == title:
                 return group
-        return self.create_child(conn, title)
+        return self.create_child(conn, title, parentTitle)
 
-    def create_child(self, conn, title):
+    def create_child(self, conn, title, parentTitle):
         """
         @rtype: RemoteGroup
         """
-        if title == 'public':
+        # specific to my use case, i only want photosets underneath PARENT_GROUP_TITLE directory
+        # no further nesting
+        # print('remote create_child, title: ' + title + ' parentTitle: ' + parentTitle);
+        if parentTitle == PARENT_GROUP_TITLE:
             return RemotePhotoSet(conn.conn().CreatePhotoSet(self.id(), photoset={'Title': title}))
         else:
             return RemoteGroup(conn.conn().CreateGroup(self.id(), group={'Title': title}))
 
+//TODO log when deleting
     def delete(self, conn):
         conn.conn().DeleteGroup(self.id())
 
@@ -140,7 +148,7 @@ class RemoteGroup(object):
 class LocalPhotoSet(object):
     def __init__(self, path):
         assert path.startswith('/')
-        assert path.endswith('public')
+        # assert path.endswith('public')
         self._path = path
 
     def path(self):
@@ -191,6 +199,7 @@ class RemotePhotoSet(object):
         conn.conn().UploadPhoto(self._photoset, path)
         logging.info('Done uploading: ' + path)
 
+//TODO log when deleting
     def delete(self, conn):
         conn.conn().DeletePhotoSet(self.id())
 
@@ -211,7 +220,6 @@ def sync_groups(conn, local_group, remote_group):
     :type remote_group: RemoteGroup
     """
     logging.info('Syncing: ' + local_group.path() + ' : ' + remote_group.title())
-
     if isinstance(remote_group, RemotePhotoSet):
         assert isinstance(local_group, LocalPhotoSet)
         sync_photosets(conn, local_group, remote_group)
@@ -222,9 +230,9 @@ def sync_groups(conn, local_group, remote_group):
         if remote.title() not in [local.title() for local in local_group.subgroups()]:
             remote.delete(conn)
 
-    # Create groups on remote that are missing on local.
+    # Create groups on remote that exist on local.
     for local_subgroup in local_group.subgroups():
-        remote_subgroup = remote_group.get_subgroup(conn, local_subgroup.title())
+        remote_subgroup = remote_group.get_subgroup(conn, local_subgroup.title(), remote_group.title())
         sync_groups(conn, local_subgroup, remote_subgroup)
 
 
